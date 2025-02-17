@@ -2,7 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 const { Client } = require("@notionhq/client");
-const { NotionToHtml } = require("@jax-pancake/notion-to-html");
+const { NotionRenderer } = require("@notion-renderer/client");
 
 const notionToken = process.env.NOTION_TOKEN;
 const notionPageId = "19d6196e90d4804c998fff35895e2463";
@@ -10,18 +10,26 @@ const notionPageId = "19d6196e90d4804c998fff35895e2463";
 async function main() {
   // 1) Initialize Notion client
   const notion = new Client({ auth: notionToken });
+  
+  // 2) Initialize renderer
+  const renderer = new NotionRenderer();
 
-  // 2) Convert Notion page to HTML
-  const n2h = new NotionToHtml({ notionClient: notion });
-  const { title, html } = await n2h.pageToHtml(notionPageId);
+  // 3) Get the page content
+  const response = await notion.blocks.children.list({
+    block_id: notionPageId,
+    page_size: 100,
+  });
 
-  // 3) Create a full HTML document with styling
+  // 4) Convert blocks to HTML
+  const html = await renderer.toHTML(response.results);
+
+  // 5) Create a full HTML document with styling
   const fullHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title}</title>
+    <title>CS2040DE Lab 5</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -58,7 +66,7 @@ async function main() {
 </body>
 </html>`;
 
-  // 4) Write the HTML to a local file
+  // 6) Write the HTML to a local file
   const outputDir = path.join(__dirname, "..", "public");
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
