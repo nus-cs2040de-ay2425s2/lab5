@@ -15,15 +15,57 @@ async function main() {
   const n2h = new NotionToHtml({ notionClient: notion });
   const { title, html } = await n2h.pageToHtml(notionPageId);
 
-  // 3) Write the HTML to a local file
-  // In this example, we'll store it in "public/index.html"
+  // 3) Create a full HTML document with styling
+  const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3 { color: #2c3e50; }
+        code {
+            background: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        img { max-width: 100%; height: auto; }
+        a { color: #3498db; }
+        blockquote {
+            margin: 0;
+            padding-left: 1em;
+            border-left: 4px solid #e5e5e5;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    ${html}
+</body>
+</html>`;
+
+  // 4) Write the HTML to a local file
   const outputDir = path.join(__dirname, "..", "public");
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
   }
 
   const outPath = path.join(outputDir, "index.html");
-  fs.writeFileSync(outPath, html);
+  fs.writeFileSync(outPath, fullHtml);
 
   console.log(`Successfully wrote HTML to ${outPath}`);
 }
