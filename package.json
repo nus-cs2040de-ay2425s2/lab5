@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@notionhq/client": "^2.2.6",
-    "@notion-renderer/client": "^0.0.30"
+    "notion-to-md": "^3.1.1",
+    "marked": "^11.1.1"
   }
 }

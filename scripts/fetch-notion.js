@@ -2,7 +2,8 @@
 const fs = require("fs");
 const path = require("path");
 const { Client } = require("@notionhq/client");
-const { NotionRenderer } = require("@notion-renderer/client");
+const { NotionToMarkdown } = require("notion-to-md");
+const { marked } = require("marked");
 
 const notionToken = process.env.NOTION_TOKEN;
 const notionPageId = "19d6196e90d4804c998fff35895e2463";
@@ -11,19 +12,20 @@ async function main() {
   // 1) Initialize Notion client
   const notion = new Client({ auth: notionToken });
   
-  // 2) Initialize renderer
-  const renderer = new NotionRenderer();
+  // 2) Initialize NotionToMarkdown
+  const n2m = new NotionToMarkdown({ notionClient: notion });
 
-  // 3) Get the page content
-  const response = await notion.blocks.children.list({
-    block_id: notionPageId,
-    page_size: 100,
-  });
+  // 3) Get page metadata
+  const page = await notion.pages.retrieve({ page_id: notionPageId });
+  
+  // 4) Convert to markdown
+  const mdBlocks = await n2m.pageToMarkdown(notionPageId);
+  const markdown = n2m.toMarkdownString(mdBlocks);
+  
+  // 5) Convert markdown to HTML
+  const html = marked.parse(markdown);
 
-  // 4) Convert blocks to HTML
-  const html = await renderer.toHTML(response.results);
-
-  // 5) Create a full HTML document with styling
+  // 6) Create a full HTML document with styling
   const fullHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,6 +61,22 @@ async function main() {
             border-left: 4px solid #e5e5e5;
             color: #666;
         }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
     </style>
 </head>
 <body>
@@ -66,7 +84,7 @@ async function main() {
 </body>
 </html>`;
 
-  // 6) Write the HTML to a local file
+  // 7) Write the HTML to a local file
   const outputDir = path.join(__dirname, "..", "public");
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
