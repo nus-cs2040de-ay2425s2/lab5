@@ -20,10 +20,10 @@ async function main() {
   
   // 4) Convert to markdown
   const mdBlocks = await n2m.pageToMarkdown(notionPageId);
-  const markdown = n2m.toMarkdownString(mdBlocks);
+  const { parent: markdownString } = n2m.toMarkdownString(mdBlocks);
   
   // 5) Convert markdown to HTML
-  const html = marked.parse(markdown);
+  const html = marked.parse(markdownString || '');
 
   // 6) Create a full HTML document with styling
   const fullHtml = `<!DOCTYPE html>
