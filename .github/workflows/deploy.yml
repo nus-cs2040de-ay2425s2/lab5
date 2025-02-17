@@ -8,26 +8,30 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+      # 1) Check out your repo so we can access the code and scripts
       - name: Check out repo
         uses: actions/checkout@v3
 
+      # 2) Set up the Node.js environment
       - name: Set up Node
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
+      # 3) Install your dependencies (from package.json)
       - name: Install dependencies
         run: npm install
 
+      # 4) Fetch Notion content (this uses the script in "scripts/fetch-notion.js")
       - name: Fetch Notion content
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}   # Must be in your repo’s Secrets
         run: npm run fetch-notion
 
-      - name: Deploy to gh-pages
+      # 5) Deploy the "public" folder to the main branch
+      - name: Deploy to main
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
-          # This action will automatically push the contents of ./public
-          # to the gh-pages branch
+          publish_branch: main  # This is the key setting. We push built site to main.
